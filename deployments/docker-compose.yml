@@ -1,17 +1,18 @@
 version: "3.8"
 
 services:
-#  merch-shop:
-#    container_name: merch-shop
-#    build:
-#      context: ../
-#      dockerfile: ./build/Dockerfile
-#    environment:
-#      - LOG_LEVEL=debug
-#      - POSTGRES_URL=dsa
-#      # TODO:
-#    networks:
-#      - postgres
+  merch-shop:
+    container_name: merch-shop
+    build:
+      context: ../
+      dockerfile: ./build/Dockerfile
+    environment:
+      - LOG_LEVEL=${LOG_LEVEL}
+      - POSTGRES_URL=${POSTGRES_URL}
+      - PORT=${PORT}
+      # TODO:
+    networks:
+      - postgres
 
   postgres:
     container_name: postgres
