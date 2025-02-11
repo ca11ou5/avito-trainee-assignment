@@ -1,0 +1,31 @@
+version: "3.8"
+
+services:
+#  merch-shop:
+#    container_name: merch-shop
+#    build:
+#      context: ../
+#      dockerfile: ./build/Dockerfile
+#    environment:
+#      - LOG_LEVEL=debug
+#      - POSTGRES_URL=dsa
+#      # TODO:
+#    networks:
+#      - postgres
+
+  postgres:
+    container_name: postgres
+    image: postgres:17-alpine
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+    networks:
+      - postgres
+
+    # DELETE:
+    ports:
+      - "5432:5432"
+
+networks:
+  postgres:
+    driver: bridge

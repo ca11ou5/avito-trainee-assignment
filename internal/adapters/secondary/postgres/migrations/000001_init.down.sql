@@ -1,0 +1,7 @@
+DROP TABLE IF EXISTS employee;
+
+DROP TABLE IF EXISTS transaction;
+
+DROP TABLE IF EXISTS merch;
+
+DROP TABLE IF EXISTS employee_merch;
