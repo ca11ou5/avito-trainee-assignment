@@ -1,39 +1,42 @@
 CREATE TABLE IF NOT EXISTS employee (
-    id SERIAL PRIMARY KEY,
-    balance INT NOT NULL,
+    username VARCHAR PRIMARY KEY,
+    hashed_password VARCHAR(255),
+    balance INT NOT NULL DEFAULT 1000,
 
-    CONSTRAINT CHECK (balance >= 0)
+    CONSTRAINT balance_check CHECK (balance >= 0)
 );
+
+-- ограничения на username
 
 CREATE TABLE IF NOT EXISTS transaction (
     id SERIAL PRIMARY KEY,
-    sender_id INT NOT NULL,
-    receiver_id INT NOT NULL,
+    sender_username VARCHAR NOT NULL,
+    receiver_username VARCHAR NOT NULL,
     amount INT NOT NULL,
 
-    FOREIGN KEY (sender_id) REFERENCES employee (id),
-    FOREIGN KEY (receiver_id) REFERENCES employee (id),
-    CONSTRAINT CHECK (amount > 0),
-    CONSTRAINT CHECK (sender_id != receiver_id)
+    FOREIGN KEY (sender_username) REFERENCES employee (username),
+    FOREIGN KEY (receiver_username) REFERENCES employee (username),
+    CONSTRAINT amount_check CHECK (amount > 0),
+    CONSTRAINT username_check CHECK (sender_username != receiver_username)
 );
 
 CREATE TABLE IF NOT EXISTS merch (
     name VARCHAR PRIMARY KEY,
     cost INT,
 
-    CONSTRAINT CHECK (cost > 0)
+    CONSTRAINT cost_check CHECK (cost > 0)
 );
 
 CREATE TABLE IF NOT EXISTS employee_merch (
-    employee_id INT NOT NULL,
+    employee_username VARCHAR NOT NULL,
     merch_name VARCHAR NOT NULL,
     count INT NOT NULL,
 
-    PRIMARY KEY (employee_id, merch_name),
-    FOREIGN KEY (employee_id) REFERENCES employee(id),
+    PRIMARY KEY (employee_username, merch_name),
+    FOREIGN KEY (employee_username) REFERENCES employee(username),
     FOREIGN KEY (merch_name) REFERENCES merch(name),
 
-    CONSTRAINT CHECK (count >= 0)
+    CONSTRAINT count_check CHECK (count >= 0)
 );
 
 INSERT INTO merch (name, cost)

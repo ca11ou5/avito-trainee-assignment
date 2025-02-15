@@ -24,8 +24,7 @@ func main() {
 	slog.Debug("config",
 		slogging.AnyAttr("data", cfg))
 
-	// TODO:
-	_ = slogging.NewLogger(
+	log := slogging.NewLogger(
 		slogging.SetLevel(cfg.LogLevel),
 		slogging.WithSource(true),
 		slogging.SetDefault(true),
@@ -33,10 +32,15 @@ func main() {
 
 	pg := postgres.NewAdapter(cfg.PostgresURL)
 
-	svc := service.New(pg)
+	svc := service.New(pg, cfg.JWTSalt)
 
-	srv := http.NewServer(svc)
+	srv := http.NewServer(svc, cfg.Port)
 
-	// TODO:
-	srv.StartListening()
+	log.Info("starting http server")
+	err = srv.StartListening()
+	if err != nil {
+		log.Error("failed to start http server",
+			slogging.ErrAttr(err))
+		os.Exit(1)
+	}
 }

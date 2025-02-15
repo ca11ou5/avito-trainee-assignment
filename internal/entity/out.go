@@ -1,34 +1,6 @@
 package entity
 
-// INFO RESPONSE
-
-type infoResponse struct {
-	Coins       int         `json:"coins"`
-	Inventory   []Item      `json:"inventory"`
-	CoinHistory CoinHistory `json:"coinHistory"`
-}
-
-type Item struct {
-	Type     string `json:"type"`
-	Quantity int    `json:"quantity"`
-}
-
-type CoinHistory struct {
-	Received []FromTransaction `json:"received"`
-	Sent     []ToTransaction   `json:"sent"`
-}
-
-type FromTransaction struct {
-	FromUser string `json:"fromUser"`
-	Amount   int    `json:"amount"`
-}
-
-type ToTransaction struct {
-	ToUser string `json:"toUser"`
-	Amount int    `json:"amount"`
-}
-
-// INFO RESPONSE
+import "github.com/golang-jwt/jwt/v5"
 
 // ERROR RESPONSE
 
@@ -69,3 +41,34 @@ type sendCoinRequest struct {
 }
 
 // SEND COIN REQUEST
+
+type Claims struct {
+	Username string `json:"username"`
+	jwt.RegisteredClaims
+}
+
+type EmployeeInfo struct {
+	Coins       int         `json:"coins"`
+	Inventory   []Item      `json:"inventory"`
+	CoinHistory CoinHistory `json:"coinHistory"`
+}
+
+type Item struct {
+	Type     string `json:"type"`
+	Quantity int    `json:"quantity"`
+}
+
+type CoinHistory struct {
+	Received []ReceivedTransaction `json:"received"`
+	Sent     []SentTransaction     `json:"sent"`
+}
+
+type ReceivedTransaction struct {
+	FromUser string `json:"fromUser"`
+	Amount   int    `json:"amount"`
+}
+
+type SentTransaction struct {
+	ToUser string `json:"toUser"`
+	Amount int    `json:"amount"`
+}

@@ -1,19 +1,23 @@
 package http
 
 import (
+	"context"
 	"errors"
 	"net/http"
 	"strings"
 )
 
-const authHeader = "Authorization"
+const (
+	authHeader      = "Authorization"
+	contextTokenKey = "token"
+)
 
 var (
 	errInvalidToken = errors.New("invalid authorization token format")
 	errMissingToken = errors.New("missing bearer token")
 )
 
-func extractBearerToken(h *http.Header) (string, error) {
+func extractBearerToken(h http.Header) (string, error) {
 	bearerToken := h.Get(authHeader)
 
 	tokenParts := strings.Split(bearerToken, " ")
@@ -26,4 +30,19 @@ func extractBearerToken(h *http.Header) (string, error) {
 	}
 
 	return tokenParts[1], nil
+}
+
+func authMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+
+		token, err := extractBearerToken(r.Header)
+		if err != nil {
+			w.WriteHeader(http.StatusUnauthorized)
+			w.Write(beatifyError(err))
+			return
+		}
+
+		next.ServeHTTP(w, r.WithContext(context.WithValue(r.Context(), contextTokenKey, token)))
+	})
 }
