@@ -2,15 +2,24 @@ package service
 
 import (
 	"context"
-	"github.com/ca11ou5/avito-trainee-assignment/internal/payload"
+	"github.com/ca11ou5/avito-trainee-assignment/internal/models"
 )
 
 type Repository interface {
-	// TODO: decompose
-	IsEmployeeExists(ctx context.Context, username string) (exists bool, err error)
-	InsertEmployee(ctx context.Context, req payload.AuthRequest) (err error)
+	// POST /api/auth
+	IsEmployeeExists(ctx context.Context, username string) error
+	InsertEmployee(ctx context.Context, creds models.Credentials) (err error)
 	GetHashedPassword(ctx context.Context, username string) (hashedPassword string, err error)
-	GetCoinsTransactions(ctx context.Context, username string)
+
+	// GET /api/info
+	GetEmployeeInfo(ctx context.Context, username string) (models.EmployeeInfo, error)
+
+	// POST /api/sendCoin
+	SendCoin(ctx context.Context, username string, trans models.SentTransaction) error
+
+	// GET /api/buy/{item}
+	IsMerchExists(ctx context.Context, itemName string) error
+	InsertEmployeeMerch(ctx context.Context, username string, merch string) error
 }
 
 type Service struct {

@@ -1,17 +1,15 @@
 CREATE TABLE IF NOT EXISTS employee (
-    username VARCHAR PRIMARY KEY,
+    username VARCHAR(255) PRIMARY KEY,
     hashed_password VARCHAR(255),
     balance INT NOT NULL DEFAULT 1000,
 
     CONSTRAINT balance_check CHECK (balance >= 0)
 );
 
--- ограничения на username
-
 CREATE TABLE IF NOT EXISTS transaction (
     id SERIAL PRIMARY KEY,
-    sender_username VARCHAR NOT NULL,
-    receiver_username VARCHAR NOT NULL,
+    sender_username VARCHAR(255) NOT NULL,
+    receiver_username VARCHAR(255) NOT NULL,
     amount INT NOT NULL,
 
     FOREIGN KEY (sender_username) REFERENCES employee (username),
@@ -28,7 +26,7 @@ CREATE TABLE IF NOT EXISTS merch (
 );
 
 CREATE TABLE IF NOT EXISTS employee_merch (
-    employee_username VARCHAR NOT NULL,
+    employee_username VARCHAR(255) NOT NULL,
     merch_name VARCHAR NOT NULL,
     count INT NOT NULL,
 
@@ -38,6 +36,7 @@ CREATE TABLE IF NOT EXISTS employee_merch (
 
     CONSTRAINT count_check CHECK (count >= 0)
 );
+
 
 INSERT INTO merch (name, cost)
 VALUES

@@ -13,12 +13,17 @@ const (
 )
 
 var (
-	errInvalidToken = errors.New("invalid authorization token format")
-	errMissingToken = errors.New("missing bearer token")
+	errInvalidToken      = errors.New("invalid authorization token format")
+	errMissingToken      = errors.New("missing bearer token")
+	errMissingTokenValue = errors.New("missing token value")
 )
 
 func extractBearerToken(h http.Header) (string, error) {
 	bearerToken := h.Get(authHeader)
+
+	if bearerToken == "" {
+		return "", errMissingToken
+	}
 
 	tokenParts := strings.Split(bearerToken, " ")
 	if len(tokenParts) != 2 || tokenParts[0] != "Bearer" {
@@ -26,10 +31,14 @@ func extractBearerToken(h http.Header) (string, error) {
 	}
 
 	if tokenParts[1] == "" {
-		return "", errMissingToken
+		return "", errMissingTokenValue
 	}
 
 	return tokenParts[1], nil
+}
+
+func contextToken(ctx context.Context) string {
+	return ctx.Value(contextTokenKey).(string)
 }
 
 func authMiddleware(next http.Handler) http.Handler {

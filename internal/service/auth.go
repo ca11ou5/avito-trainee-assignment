@@ -2,7 +2,7 @@ package service
 
 import (
 	"fmt"
-	"github.com/ca11ou5/avito-trainee-assignment/internal/entity"
+	"github.com/ca11ou5/avito-trainee-assignment/internal/models"
 	"github.com/golang-jwt/jwt/v5"
 	"golang.org/x/crypto/bcrypt"
 	"time"
@@ -11,7 +11,7 @@ import (
 func (s *Service) createJWT(username string) (string, error) {
 	expTime := time.Now().Add(24 * time.Hour)
 
-	claims := &entity.Claims{
+	claims := &models.Claims{
 		Username: username,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(expTime),
@@ -30,18 +30,18 @@ func (s *Service) createJWT(username string) (string, error) {
 }
 
 func (s *Service) verifyJWT(token string) (string, error) {
-	jwtToken, err := jwt.ParseWithClaims(token, &entity.Claims{}, func(token *jwt.Token) (interface{}, error) {
+	jwtToken, err := jwt.ParseWithClaims(token, &models.Claims{}, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("unexpected signing method: %s", token.Header["alg"])
 		}
 
-		return s.JWTSalt, nil
+		return []byte(s.JWTSalt), nil
 	})
 	if err != nil {
 		return "", fmt.Errorf("parse jwt: %s", err)
 	}
 
-	if claims, ok := jwtToken.Claims.(*entity.Claims); ok && jwtToken.Valid {
+	if claims, ok := jwtToken.Claims.(*models.Claims); ok && jwtToken.Valid {
 		username := claims.Username
 
 		if username == "" {

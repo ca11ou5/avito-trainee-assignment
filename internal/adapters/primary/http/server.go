@@ -3,8 +3,7 @@ package http
 import (
 	"context"
 	"fmt"
-	"github.com/ca11ou5/avito-trainee-assignment/internal/entity"
-	"github.com/ca11ou5/avito-trainee-assignment/internal/payload"
+	"github.com/ca11ou5/avito-trainee-assignment/internal/models"
 	"github.com/ca11ou5/slogging"
 	"github.com/gorilla/mux"
 	"log/slog"
@@ -12,8 +11,17 @@ import (
 )
 
 type Service interface {
-	AuthenticateUser(ctx context.Context, req payload.AuthRequest) (string, error)
-	ExtractUserInfo(ctx context.Context, token string) (entity.EmployeeInfo, error)
+	// AuthenticateUser POST /api/auth
+	AuthenticateUser(ctx context.Context, creds models.Credentials) (string, error)
+
+	// ExtractUserInfo GET /api/info
+	ExtractUserInfo(ctx context.Context, token string) (models.EmployeeInfo, error)
+
+	// SendCoin POST /api/sendCoin
+	SendCoin(ctx context.Context, token string, trans models.SentTransaction) error
+
+	// BuyItem GET /api/buy/{item}
+	BuyItem(ctx context.Context, token string, item string) error
 }
 
 type Server struct {
