@@ -3,7 +3,10 @@ package postgres
 import (
 	"github.com/ca11ou5/slogging"
 	"github.com/jmoiron/sqlx"
+
+	// postgres driver, need sslmode=disable
 	_ "github.com/lib/pq"
+
 	"log/slog"
 	"os"
 )

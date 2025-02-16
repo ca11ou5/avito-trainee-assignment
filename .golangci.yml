@@ -1,7 +1,7 @@
 run:
   deadline: 3m
   issues-exit-code: 1
-  tests: true
+  tests: false
 
 output:
   formats:
@@ -18,6 +18,11 @@ linters-settings:
   goconst:
     min-len: 2
     min-occurrences: 2
+  errcheck:
+    check-blank: true
+    exclude-functions:
+      - (net/http.ResponseWriter).Write
+      - encoding/json.Marshal
 
 linters:
   disable-all: true
@@ -33,16 +38,4 @@ linters:
     - gosimple
     - unused
     - staticcheck
-    # - dupl
-
-#issues:
-#  exclude-use-default: false
-#  exclude:
-#    - G104
-#    - exported func * returns unexported type *, which can be annoying to use
-#    - (comment on exported (method|function|type|const)|should have( a package)? comment|comment should be of the form)
-#    - should have a package comment, unless it's in another file for this package
-#    - don't use an underscore in package name
-#    - Error return value of .((os\.)?std(out|err)\..*|.*Close|.*Flush|os\.Remove(All)?|.*printf?|os\.(Un)?Setenv|.*Rollback). is not checked
-#    - should check returned error before deferring
-#    - (struct field|func|const) .*Dns.* should be .*DNS.*
+    - dupl

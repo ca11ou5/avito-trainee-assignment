@@ -1,8 +1,9 @@
 package models
 
 import (
-	"errors"
 	"github.com/golang-jwt/jwt/v5"
+
+	"errors"
 )
 
 type Claims struct {

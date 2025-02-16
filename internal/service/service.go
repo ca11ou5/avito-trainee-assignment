@@ -1,12 +1,14 @@
 package service
 
 import (
-	"context"
 	"github.com/ca11ou5/avito-trainee-assignment/internal/models"
+
+	"context"
 )
 
-type Repository interface {
+type MerchRepository interface {
 	// POST /api/auth
+	// IsEmployeeExists returns nil if exists, if not ErrEmployeeNotExists
 	IsEmployeeExists(ctx context.Context, username string) error
 	InsertEmployee(ctx context.Context, creds models.Credentials) (err error)
 	GetHashedPassword(ctx context.Context, username string) (hashedPassword string, err error)
@@ -22,15 +24,21 @@ type Repository interface {
 	InsertEmployeeMerch(ctx context.Context, username string, merch string) error
 }
 
-type Service struct {
-	repo Repository
-
-	JWTSalt string
+type AuthRepository interface {
+	HashPassword(password string) (hashedPassword string, err error)
+	ComparePasswords(hashedPassword string, password string) error
+	CreateAuthToken(username string) (token string, err error)
+	VerifyAuthToken(token string) (username string, err error)
 }
 
-func New(repo Repository, jwtSalt string) *Service {
+type Service struct {
+	merch MerchRepository
+	auth  AuthRepository
+}
+
+func New(merch MerchRepository, auth AuthRepository) *Service {
 	return &Service{
-		repo:    repo,
-		JWTSalt: jwtSalt,
+		merch: merch,
+		auth:  auth,
 	}
 }

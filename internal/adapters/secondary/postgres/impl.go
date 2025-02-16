@@ -1,17 +1,18 @@
 package postgres
 
 import (
+	"github.com/ca11ou5/avito-trainee-assignment/internal/models"
+	"github.com/jmoiron/sqlx"
+
 	"context"
 	"errors"
 	"fmt"
-	"github.com/ca11ou5/avito-trainee-assignment/internal/models"
-	"github.com/jmoiron/sqlx"
 )
 
 const (
 	isEmployeeExistsQuery  = `SELECT 1 FROM employee WHERE username = $1;`
 	insertEmployeeQuery    = `INSERT INTO employee (username, hashed_password) VALUES ($1, $2);`
-	getHashedPasswordQuery = `SELECT hashed_password FROM employee WHERE username = $1;`
+	getHashedPasswordQuery = `SELECT hashed_password FROM employee WHERE username = $1;` //nolint:gosec
 
 	getEmployeeReceiverTransactions = `SELECT sender_username, amount FROM transaction WHERE receiver_username = $1;`
 	getEmployeeSentTransactions     = `SELECT receiver_username, amount FROM transaction WHERE sender_username = $1;`
@@ -116,7 +117,10 @@ func (a *Adapter) GetEmployeeInfo(ctx context.Context, username string) (models.
 		return nil
 	}()
 	if err != nil {
-		tx.Rollback()
+		err = tx.Rollback()
+		if err != nil {
+			return models.EmployeeInfo{}, fmt.Errorf("rollback transaction: %s", err)
+		}
 		return models.EmployeeInfo{}, err
 	}
 
@@ -197,7 +201,10 @@ func (a *Adapter) SendCoin(ctx context.Context, username string, trans models.Se
 		return nil
 	}()
 	if err != nil {
-		tx.Rollback()
+		err = tx.Rollback()
+		if err != nil {
+			return fmt.Errorf("rollback transaction: %s", err)
+		}
 		return err
 	}
 
@@ -223,13 +230,16 @@ func (a *Adapter) InsertEmployeeMerch(ctx context.Context, username string, merc
 
 	res, err := tx.Exec(insertEmployeeMerchQuery, username, merch)
 	if err != nil {
-		tx.Rollback()
+		err = tx.Rollback()
+		if err != nil {
+			return fmt.Errorf("rollback transaction: %s", err)
+		}
 		return fmt.Errorf("exec insert merch: %s", err)
 	}
 
-	affected, _ := res.RowsAffected()
-	if affected == 0 {
-		tx.Rollback()
+	affected, err := res.RowsAffected()
+	if affected == 0 || err != nil {
+		tx.Rollback() //nolint:errcheck
 		return ErrNotEnoughBalance
 	}
 

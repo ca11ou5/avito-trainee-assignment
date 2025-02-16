@@ -8,9 +8,10 @@ import (
 )
 
 const (
-	authHeader      = "Authorization"
-	contextTokenKey = "token"
+	authHeader = "Authorization"
 )
+
+type tokenKey struct{}
 
 var (
 	errInvalidToken      = errors.New("invalid authorization token format")
@@ -38,7 +39,7 @@ func extractBearerToken(h http.Header) (string, error) {
 }
 
 func contextToken(ctx context.Context) string {
-	return ctx.Value(contextTokenKey).(string)
+	return ctx.Value(tokenKey{}).(string)
 }
 
 func authMiddleware(next http.Handler) http.Handler {
@@ -52,6 +53,6 @@ func authMiddleware(next http.Handler) http.Handler {
 			return
 		}
 
-		next.ServeHTTP(w, r.WithContext(context.WithValue(r.Context(), contextTokenKey, token)))
+		next.ServeHTTP(w, r.WithContext(context.WithValue(r.Context(), tokenKey{}, token)))
 	})
 }

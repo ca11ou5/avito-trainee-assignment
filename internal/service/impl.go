@@ -1,11 +1,12 @@
 package service
 
 import (
+	"github.com/ca11ou5/avito-trainee-assignment/internal/adapters/secondary/postgres"
+	"github.com/ca11ou5/avito-trainee-assignment/internal/models"
+
 	"context"
 	"errors"
 	"fmt"
-	"github.com/ca11ou5/avito-trainee-assignment/internal/adapters/secondary/postgres"
-	"github.com/ca11ou5/avito-trainee-assignment/internal/models"
 )
 
 var (
@@ -15,19 +16,20 @@ var (
 )
 
 func (s *Service) AuthenticateUser(ctx context.Context, creds models.Credentials) (string, error) {
-	err := s.repo.IsEmployeeExists(ctx, creds.Username)
-
-	incomingPassword := creds.Password
-	creds.Password = s.hashPassword(creds.Password)
-
+	err := s.merch.IsEmployeeExists(ctx, creds.Username)
 	// employee does not exist, create
 	if err != nil {
-		err = s.repo.InsertEmployee(ctx, creds)
+		creds.Password, err = s.auth.HashPassword(creds.Password)
+		if err != nil {
+			return "", fmt.Errorf("hash password: %s", err)
+		}
+
+		err = s.merch.InsertEmployee(ctx, creds)
 		if err != nil {
 			return "", fmt.Errorf("create employee: %s", err)
 		}
 
-		token, err := s.createJWT(creds.Username)
+		token, err := s.auth.CreateAuthToken(creds.Username)
 		if err != nil {
 			return "", fmt.Errorf("create jwt: %s", err)
 		}
@@ -35,17 +37,17 @@ func (s *Service) AuthenticateUser(ctx context.Context, creds models.Credentials
 		return token, nil
 	}
 
-	hashedPassword, err := s.repo.GetHashedPassword(ctx, creds.Username)
+	hashedPassword, err := s.merch.GetHashedPassword(ctx, creds.Username)
 	if err != nil {
 		return "", fmt.Errorf("get hashed password: %s", err)
 	}
 
-	err = s.comparePasswords(hashedPassword, incomingPassword)
+	err = s.auth.ComparePasswords(hashedPassword, creds.Password)
 	if err != nil {
 		return "", ErrWrongPassword
 	}
 
-	token, err := s.createJWT(creds.Username)
+	token, err := s.auth.CreateAuthToken(creds.Username)
 	if err != nil {
 		return "", fmt.Errorf("create jwt: %s", err)
 	}
@@ -54,17 +56,17 @@ func (s *Service) AuthenticateUser(ctx context.Context, creds models.Credentials
 }
 
 func (s *Service) ExtractUserInfo(ctx context.Context, token string) (models.EmployeeInfo, error) {
-	username, err := s.verifyJWT(token)
+	username, err := s.auth.VerifyAuthToken(token)
 	if err != nil {
 		return models.EmployeeInfo{}, fmt.Errorf("%w: %s", ErrInvalidToken, err)
 	}
 
-	err = s.repo.IsEmployeeExists(ctx, username)
+	err = s.merch.IsEmployeeExists(ctx, username)
 	if err != nil {
 		return models.EmployeeInfo{}, err
 	}
 
-	info, err := s.repo.GetEmployeeInfo(ctx, username)
+	info, err := s.merch.GetEmployeeInfo(ctx, username)
 	if err != nil {
 		return info, fmt.Errorf("get employee info: %s", err)
 	}
@@ -73,7 +75,7 @@ func (s *Service) ExtractUserInfo(ctx context.Context, token string) (models.Emp
 }
 
 func (s *Service) SendCoin(ctx context.Context, token string, trans models.SentTransaction) error {
-	username, err := s.verifyJWT(token)
+	username, err := s.auth.VerifyAuthToken(token)
 	if err != nil {
 		return fmt.Errorf("%w: %s", ErrInvalidToken, err)
 	}
@@ -83,13 +85,13 @@ func (s *Service) SendCoin(ctx context.Context, token string, trans models.SentT
 	}
 
 	for _, name := range []string{username, trans.ToUser} {
-		err = s.repo.IsEmployeeExists(ctx, name)
+		err = s.merch.IsEmployeeExists(ctx, name)
 		if err != nil {
 			return err
 		}
 	}
 
-	err = s.repo.SendCoin(ctx, username, trans)
+	err = s.merch.SendCoin(ctx, username, trans)
 	if err != nil {
 		if errors.Is(err, postgres.ErrNotEnoughBalance) {
 			return err
@@ -101,22 +103,22 @@ func (s *Service) SendCoin(ctx context.Context, token string, trans models.SentT
 }
 
 func (s *Service) BuyItem(ctx context.Context, token string, item string) error {
-	username, err := s.verifyJWT(token)
+	username, err := s.auth.VerifyAuthToken(token)
 	if err != nil {
 		return fmt.Errorf("%w: %s", ErrInvalidToken, err)
 	}
 
-	err = s.repo.IsEmployeeExists(ctx, username)
+	err = s.merch.IsEmployeeExists(ctx, username)
 	if err != nil {
 		return err
 	}
 
-	err = s.repo.IsMerchExists(ctx, item)
+	err = s.merch.IsMerchExists(ctx, item)
 	if err != nil {
 		return err
 	}
 
-	err = s.repo.InsertEmployeeMerch(ctx, username, item)
+	err = s.merch.InsertEmployeeMerch(ctx, username, item)
 	if err != nil {
 		if errors.Is(err, postgres.ErrNotEnoughBalance) {
 			return err

@@ -1,14 +1,15 @@
 package http
 
 import (
-	"context"
-	"encoding/json"
-	"errors"
-	"fmt"
 	"github.com/ca11ou5/avito-trainee-assignment/internal/adapters/secondary/postgres"
 	"github.com/ca11ou5/avito-trainee-assignment/internal/models"
 	"github.com/ca11ou5/avito-trainee-assignment/internal/service"
 	"github.com/gorilla/mux"
+
+	"context"
+	"encoding/json"
+	"errors"
+	"fmt"
 	"io"
 	"net/http"
 	"time"

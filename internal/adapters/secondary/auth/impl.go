@@ -1,14 +1,15 @@
-package service
+package auth
 
 import (
-	"fmt"
 	"github.com/ca11ou5/avito-trainee-assignment/internal/models"
 	"github.com/golang-jwt/jwt/v5"
 	"golang.org/x/crypto/bcrypt"
+
+	"fmt"
 	"time"
 )
 
-func (s *Service) createJWT(username string) (string, error) {
+func (a *Adapter) CreateAuthToken(username string) (string, error) {
 	expTime := time.Now().Add(24 * time.Hour)
 
 	claims := &models.Claims{
@@ -21,7 +22,7 @@ func (s *Service) createJWT(username string) (string, error) {
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 
-	signedToken, err := token.SignedString([]byte(s.JWTSalt))
+	signedToken, err := token.SignedString([]byte(a.JWTSalt))
 	if err != nil {
 		return "", fmt.Errorf("sign token: %s", err)
 	}
@@ -29,13 +30,13 @@ func (s *Service) createJWT(username string) (string, error) {
 	return signedToken, nil
 }
 
-func (s *Service) verifyJWT(token string) (string, error) {
+func (a *Adapter) VerifyAuthToken(token string) (string, error) {
 	jwtToken, err := jwt.ParseWithClaims(token, &models.Claims{}, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("unexpected signing method: %s", token.Header["alg"])
 		}
 
-		return []byte(s.JWTSalt), nil
+		return []byte(a.JWTSalt), nil
 	})
 	if err != nil {
 		return "", fmt.Errorf("parse jwt: %s", err)
@@ -63,11 +64,11 @@ func (s *Service) verifyJWT(token string) (string, error) {
 	return "", fmt.Errorf("invalid jwt token")
 }
 
-func (s *Service) hashPassword(password string) string {
-	hashedPassword, _ := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
-	return string(hashedPassword)
+func (a *Adapter) HashPassword(password string) (string, error) {
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	return string(hashedPassword), err
 }
 
-func (s *Service) comparePasswords(hashedPassword, password string) error {
+func (a *Adapter) ComparePasswords(hashedPassword, password string) error {
 	return bcrypt.CompareHashAndPassword([]byte(hashedPassword), []byte(password))
 }

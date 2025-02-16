@@ -1,13 +1,15 @@
 package http
 
 import (
-	"context"
-	"fmt"
 	"github.com/ca11ou5/avito-trainee-assignment/internal/models"
 	"github.com/ca11ou5/slogging"
 	"github.com/gorilla/mux"
+
+	"context"
+	"fmt"
 	"log/slog"
 	"net/http"
+	"time"
 )
 
 type Service interface {
@@ -26,22 +28,24 @@ type Service interface {
 
 type Server struct {
 	svc Service
-
-	Port string
 }
 
-func NewServer(svc Service, port string) *Server {
+func NewServer(svc Service) *Server {
 	return &Server{
 		svc: svc,
-
-		Port: port,
 	}
 }
 
-func (s *Server) StartListening() error {
+func (s *Server) StartListening(port string) error {
 	router := s.initRouter()
 
-	return http.ListenAndServe(fmt.Sprintf(":%s", s.Port), router)
+	server := &http.Server{
+		Addr:              fmt.Sprintf(":%s", port),
+		Handler:           router,
+		ReadHeaderTimeout: 3 * time.Second,
+	}
+
+	return server.ListenAndServe()
 }
 
 func (s *Server) initRouter() *mux.Router {
